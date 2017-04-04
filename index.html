@@ -31,23 +31,33 @@
     <script src="js/gpocean.js"></script>
 
     <script type="x-shader/x-vertex" id="vertexShader">
+        attribute vec3 offset;
+        //attribute float yc1;
         varying vec3 fragmentPosition;
+        //varying float yc1Norm;
         void main() {
-            fragmentPosition = vec3(modelViewMatrix * vec4(position, 1.0));
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            float scale = max(1.0 + offset.y * 1.5 / 10.0, 0.5);
+            vec3 op = position * scale + offset;
+            fragmentPosition = vec3(modelViewMatrix * vec4(op, 1.0));
+            //yc1Norm = min(abs(yc1 / op.y), 1.0);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(op, 1.0);
         }
     </script>
 
     <script type="x-shader/x-fragment" id="fragmentShader">
         uniform float fogStart;
         uniform float fogEnd;
-        uniform vec3 waveColor;
+        uniform vec3 fogColor;
+        uniform vec3 waveColor1;
+        uniform vec3 waveColor2;
         varying vec3 fragmentPosition;
+        //varying float yc1Norm;
         void main() {
+            //result = mix(waveColor1, waveColor2, yc1Norm);
             float viewDistance = length(fragmentPosition - cameraPosition);
             float fogDistance = step(fogStart, viewDistance) * viewDistance;
             float fogParam = 1.0 - clamp((fogEnd - fogDistance) / (fogEnd - fogStart), 0.0, 1.0);
-            vec3 result = mix(waveColor, vec3(0.1), fogParam);
+            vec3 result = mix(waveColor1, fogColor, fogParam);
             gl_FragColor = vec4(result, 1.0);
         }
     </script>
@@ -57,8 +67,7 @@
         var webGL = !!(window.WebGLRenderingContext &&
             (testCanvas.getContext('webgl') || testCanvas.getContext('experimental-webgl')));
 
-        var camera, scene, renderer, orbit, stats, patch;
-        var particles = [];
+        var camera, scene, renderer, orbit, stats, patch, ig;
 
         if (webGL) {
             setup();
@@ -82,34 +91,33 @@
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x000000);
 
-            patch = new Ocean({ dx: 40, dz: 40, px: 16, pz: 8 });
+            patch = new Ocean({ dx: 40, dz: 40, px: 32, pz: 16 });
             patch.addWave([1, 0.4], 180, 0.07, 0);
             patch.addWave([1, 0], 70, 0.05, 0);
             patch.addWave([1, 0.2], 12, 0.1, 0);
             patch.addWave([1, 0.15], 17, 0.2, 0);
 
-            // create particles
-            var sg = new THREE.SphereGeometry(0.05, 16, 16);
+            ig = new THREE.InstancedBufferGeometry();
+            ig.copy(new THREE.CircleBufferGeometry(0.05, 32));
+            ig.addAttribute("offset", new THREE.InstancedBufferAttribute(patch.vertices, 3));
+            //ig.addAttribute("yc1", new THREE.InstancedBufferAttribute(patch.yc[w1Id], 1));
+
             var vs = document.getElementById("vertexShader").textContent;
             var fs = document.getElementById("fragmentShader").textContent;
-            var sm = new THREE.ShaderMaterial({
+            var material = new THREE.ShaderMaterial({
                 uniforms: {
                     fogStart: { value: 40.0 },
-                    fogEnd: { value: 120.0 },
-                    waveColor: { value: new THREE.Vector3(66/255, 161/255, 244/255) }
+                    fogEnd: { value: 200.0 },
+                    fogColor: { value: new THREE.Vector3(0.0, 0.0, 0.0) },
+                    waveColor1: { value: new THREE.Vector3(66/255, 161/255, 244/255) }
+                    //waveColor2: { value: new THREE.Vector3(65/255, 143/255, 244/255) }
                 },
                 vertexShader: vs,
                 fragmentShader: fs
             });
 
-            for (var i = 0; i < patch.vertexCount; i++) {
-                particle = new THREE.Mesh(sg, sm);
-                particles.push(particle);
-                scene.add(particle);
-            }
-
-            // init particle positions
-            updateParticles();
+            var mesh = new THREE.Mesh(ig, material);
+            scene.add(mesh);
 
             renderer = new THREE.WebGLRenderer();
             renderer.setPixelRatio(window.devicePixelRatio);
@@ -117,39 +125,29 @@
             //renderer.localClippingEnabled = true;
             document.body.appendChild(renderer.domElement);
 
-            //orbit = new THREE.OrbitControls(camera, renderer.domElement);
+            orbit = new THREE.OrbitControls(camera, renderer.domElement);
             //orbit.enableZoom = false;
 
-            //stats = new Stats();
-            //stats.domElement.setAttribute("id", "stats");
-            //document.body.appendChild(stats.domElement);
+            stats = new Stats();
+            stats.domElement.setAttribute("id", "stats");
+            document.body.appendChild(stats.domElement);
 
             // add event handlers
             window.addEventListener("resize", onResize, false);
         }
 
         function run() {
-            //stats.begin();
+            stats.begin();
             patch.evaluate(Date.now() / 1000);
             updateParticles();
             renderer.render(scene, camera);
-            //stats.end();
+            stats.end();
             requestAnimationFrame(run);
         }
 
         function updateParticles() {
-            for (var i = 0; i < particles.length; i++) {
-                var particle = particles[i];
-                particle.position.x = patch.vertices[i * 3];
-                particle.position.y = patch.vertices[i * 3 + 1];
-                particle.position.z = patch.vertices[i * 3 + 2];
-
-                // scaling
-                var y = particle.position.y;
-                var sv = 1 + (y / 10) * 1.5;
-                if (sv < 0.02) sv = 0.02;
-                particle.scale.set(sv, sv, sv);
-            }
+            ig.attributes.offset.needsUpdate = true;
+            //ig.attributes.yc1.needsUpdate = true;
         }
 
         function onResize() {

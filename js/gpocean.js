@@ -1,5 +1,6 @@
 // lambda - meters, phase - radians
-function Wave(k, lambda, pAmp, phase) {
+function Wave(k, lambda, pAmp, phase, saveYC) {
+    this.id = Wave.id++;
     this.kNorm = math.divide(k, math.norm(k));
     this.kMag = 2 * Math.PI / lambda;
     this.k = math.multiply(this.kNorm, this.kMag);
@@ -8,7 +9,9 @@ function Wave(k, lambda, pAmp, phase) {
     if (pAmp > 1) pAmp = 1;
     this.amp = pAmp / this.kMag;
     this.phase = phase;
+    this.saveYC = saveYC;
 }
+Wave.id = 1;
 
 // m rows by n cols
 function Ocean(options) {
@@ -24,7 +27,7 @@ function Ocean(options) {
     this.vertexCols = this.xPatches + 1;
     this.vertexCount = this.vertexRows * this.vertexCols;
 
-    // add vertices
+    // add vertices and normals
     var verticesArray = []; // to be copied into vertices0 
     var normalsArray = [];
     var normalPointsArray = []; // for normal mesh
@@ -93,17 +96,21 @@ function Ocean(options) {
     }
 
     this.waves = [];
+    this.yc = {}; // wave y-components
 }
 
-Ocean.prototype.addWave = function(k, lambda, pAmp, phase) {
-    this.waves.push(new Wave(k, lambda, pAmp, phase));
+Ocean.prototype.addWave = function(k, lambda, pAmp, phase, saveYC) {
+    var wave = new Wave(k, lambda, pAmp, phase, saveYC);
+    this.waves.push(wave);
+    if (saveYC) this.yc[wave.id] = new Float32Array(this.vertexCount);
+    return wave.id;
 };
 
 // t in seconds?
 Ocean.prototype.evaluate = function(t) {
     var self = this;
 
-    var i, index, x, y, z, x0, y0, z0, c, temp, n;
+    var i, index, x, y, z, x0, y0, z0, c, temp, n, yc;
     for (i = 0; i < this.vertexCount; i++) {
         index = i * 3;
         x = x0 = this.vertices0[index];
@@ -123,9 +130,11 @@ Ocean.prototype.evaluate = function(t) {
                 n[2] += wave.k[1] * wave.amp * Math.sin(c);
             }
 
-            x = x - wave.kNorm[0] * temp;
-            z = z - wave.kNorm[1] * temp;
-            y = y + wave.amp * Math.cos(c);
+            x -= wave.kNorm[0] * temp;
+            z -= wave.kNorm[1] * temp;
+            yc = wave.amp * Math.cos(c);
+            y += yc;
+            if (wave.saveYC) self.yc[wave.id][i] = yc; 
         });
 
         this.vertices[index] = x;

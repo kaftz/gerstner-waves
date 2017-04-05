@@ -81,17 +81,17 @@
 
     <script>
         var testCanvas = document.createElement("canvas");
-        var webGL = !!(window.WebGLRenderingContext &&
-            (testCanvas.getContext('webgl') || testCanvas.getContext('experimental-webgl')));
-
+        var testContext = testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl");
+        var webGL = !!(window.WebGLRenderingContext && testContext);
         var camera, scene, renderer, orbit, stats, patch, ig;
 
-        if (webGL) {
+        if (webGL && testContext.getExtension("ANGLE_instanced_arrays")) {
             setup();
             run();
         } else {
+            var text = "Sorry, unable to initialize WebGL and required extensions. https://www.google.com/chrome/browser/";
             var div = document.createElement("div");
-            var content = document.createTextNode("Sorry, unable to initialize WebGL. https://www.google.com/chrome/browser/");
+            var content = document.createTextNode(text);
             div.appendChild(content);
             div.id = "error";
             document.body.appendChild(div);

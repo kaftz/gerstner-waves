@@ -146,9 +146,9 @@
             //orbit = new THREE.OrbitControls(camera, renderer.domElement);
             //orbit.enableZoom = false;
 
-            stats = new Stats();
-            stats.domElement.setAttribute("id", "stats");
-            document.body.appendChild(stats.domElement);
+            //stats = new Stats();
+            //stats.domElement.setAttribute("id", "stats");
+            //document.body.appendChild(stats.domElement);
 
             // add event handlers
             window.addEventListener("resize", onResize, false);
@@ -157,11 +157,11 @@
         var log = false;
 
         function run() {
-            stats.begin();
+            //stats.begin();
             patch.evaluate(Date.now() / 1000);
             updateParticles();
             renderer.render(scene, camera);
-            stats.end();
+            //stats.end();
             requestAnimationFrame(run);
         }
 

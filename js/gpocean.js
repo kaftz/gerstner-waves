@@ -16,7 +16,6 @@ Wave.id = 1;
 // m rows by n cols
 function Ocean(options) {
     this.options = options || {};
-    this.options.computeNormals = this.options.computeMesh && this.options.computeNormals;
     this.options.computeNormalMesh = this.options.computeNormals && this.options.computeNormalMesh;
 
     this.xDistance = options.dx || 40;
@@ -142,12 +141,13 @@ Ocean.prototype.evaluate = function(t) {
         this.vertices[index + 2] = z;
 
         if (this.options.computeNormals) {
-            n = math.divide(n, math.norm(n)); // normalizing, move to vs?
+            //n = math.divide(n, math.norm(n)); // normalizing, move to vs?
             this.normals[index] = n[0];
             this.normals[index + 1] = n[1];
             this.normals[index + 2] = n[2];
         }
 
+        // update to normalize values first?
         if (this.options.computeNormalMesh) {
             var nIndex = index + this.vertices.length;
             this.normalVertices[nIndex] = x0 + x + this.normals[index];

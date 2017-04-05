@@ -1,6 +1,5 @@
 // lambda - meters, phase - radians
-function Wave(k, lambda, pAmp, phase, saveYC) {
-    this.id = Wave.id++;
+function Wave(k, lambda, pAmp, phase) {
     this.kNorm = math.divide(k, math.norm(k));
     this.kMag = 2 * Math.PI / lambda;
     this.k = math.multiply(this.kNorm, this.kMag);
@@ -9,9 +8,7 @@ function Wave(k, lambda, pAmp, phase, saveYC) {
     if (pAmp > 1) pAmp = 1;
     this.amp = pAmp / this.kMag;
     this.phase = phase;
-    this.saveYC = saveYC;
 }
-Wave.id = 1;
 
 // m rows by n cols
 function Ocean(options) {
@@ -95,21 +92,17 @@ function Ocean(options) {
     }
 
     this.waves = [];
-    this.yc = {}; // wave y-components
 }
 
-Ocean.prototype.addWave = function(k, lambda, pAmp, phase, saveYC) {
-    var wave = new Wave(k, lambda, pAmp, phase, saveYC);
-    this.waves.push(wave);
-    if (saveYC) this.yc[wave.id] = new Float32Array(this.vertexCount);
-    return wave.id;
+Ocean.prototype.addWave = function(k, lambda, pAmp, phase) {
+    this.waves.push(new Wave(k, lambda, pAmp, phase));
 };
 
-// t in seconds?
+// t in seconds
 Ocean.prototype.evaluate = function(t) {
     var self = this;
 
-    var i, index, x, y, z, x0, y0, z0, c, temp, n, yc;
+    var i, index, x, y, z, x0, y0, z0, c, sinc, cosc, temp, n;
     for (i = 0; i < this.vertexCount; i++) {
         index = i * 3;
         x = x0 = this.vertices0[index];
@@ -121,19 +114,19 @@ Ocean.prototype.evaluate = function(t) {
         // pull fn out?
         this.waves.forEach(function(wave) {
             c = wave.k[0] * x0 + wave.k[1] * z0 - wave.f * t - wave.phase;
-            temp = wave.amp * Math.sin(c);
+            sinc = Math.sin(c);
+            cosc = Math.cos(c);
+            temp = wave.amp * sinc;
 
             if (self.options.computeNormals) {
-                n[0] += wave.k[0] * wave.amp * Math.sin(c);
-                n[1] += 1 - wave.kMag * wave.amp * Math.cos(c);
-                n[2] += wave.k[1] * wave.amp * Math.sin(c);
+                n[0] += wave.k[0] * wave.amp * sinc;
+                n[1] += 1 - wave.kMag * wave.amp * cosc;
+                n[2] += wave.k[1] * wave.amp * sinc;
             }
 
             x -= wave.kNorm[0] * temp;
             z -= wave.kNorm[1] * temp;
-            yc = wave.amp * Math.cos(c);
-            y += yc;
-            if (wave.saveYC) self.yc[wave.id][i] = yc; 
+            y += wave.amp * cosc;
         });
 
         this.vertices[index] = x;
@@ -141,13 +134,12 @@ Ocean.prototype.evaluate = function(t) {
         this.vertices[index + 2] = z;
 
         if (this.options.computeNormals) {
-            //n = math.divide(n, math.norm(n)); // normalizing, move to vs?
             this.normals[index] = n[0];
             this.normals[index + 1] = n[1];
             this.normals[index + 2] = n[2];
         }
 
-        // update to normalize values first?
+        // normalize values first
         if (this.options.computeNormalMesh) {
             var nIndex = index + this.vertices.length;
             this.normalVertices[nIndex] = x0 + x + this.normals[index];

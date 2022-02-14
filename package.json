@@ -1,0 +1,10 @@
+{
+  "name": "gerstner-waves",
+  "scripts": {
+    "serve": "webpack serve"
+  },
+  "devDependencies": {
+    "webpack": "^5.68.0",
+    "webpack-dev-server": "^4.7.4"
+  }
+}

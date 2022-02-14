@@ -1,4 +1,4 @@
-import { Ocean } from "./gpocean.js";
+import { Ocean } from "./GerstnerOcean.js";
 
 var testCanvas = document.createElement("canvas");
 var testContext =

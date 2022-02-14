@@ -1,8 +1,7 @@
 import { Ocean } from "./GerstnerOcean.js";
 
 var testCanvas = document.createElement("canvas");
-var testContext =
-  testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl");
+var testContext = testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl");
 var webGL = !!(window.WebGLRenderingContext && testContext);
 var camera, scene, renderer, orbit, stats, patch, ig;
 
@@ -42,14 +41,8 @@ function setup() {
 
   ig = new THREE.InstancedBufferGeometry();
   ig.copy(new THREE.CircleBufferGeometry(0.05, 32));
-  ig.addAttribute(
-    "offset",
-    new THREE.InstancedBufferAttribute(patch.vertices, 3)
-  );
-  ig.addAttribute(
-    "normal",
-    new THREE.InstancedBufferAttribute(patch.normals, 3)
-  );
+  ig.addAttribute("offset", new THREE.InstancedBufferAttribute(patch.vertices, 3));
+  ig.addAttribute("normal", new THREE.InstancedBufferAttribute(patch.normals, 3));
 
   var vs = document.getElementById("vertexShader").textContent;
   var fs = document.getElementById("fragmentShader").textContent;
@@ -72,15 +65,15 @@ function setup() {
   renderer = new THREE.WebGLRenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(width, height);
-  //renderer.localClippingEnabled = true;
+  // renderer.localClippingEnabled = true;
   document.body.appendChild(renderer.domElement);
 
-  //orbit = new THREE.OrbitControls(camera, renderer.domElement);
-  //orbit.enableZoom = false;
+  // orbit = new THREE.OrbitControls(camera, renderer.domElement);
+  // orbit.enableZoom = false;
 
-  //stats = new Stats();
-  //stats.domElement.setAttribute("id", "stats");
-  //document.body.appendChild(stats.domElement);
+  // stats = new Stats();
+  // stats.domElement.setAttribute("id", "stats");
+  // document.body.appendChild(stats.domElement);
 
   // Add event handlers
   window.addEventListener("resize", onResize, false);
@@ -89,11 +82,11 @@ function setup() {
 var log = false;
 
 function run() {
-  //stats.begin();
+  // stats.begin();
   patch.evaluate(Date.now() / 1000);
   updateParticles();
   renderer.render(scene, camera);
-  //stats.end();
+  // stats.end();
   requestAnimationFrame(run);
 }
 

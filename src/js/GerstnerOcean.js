@@ -17,8 +17,7 @@ class Wave {
 class Ocean {
   constructor(options) {
     this.options = options || {};
-    this.options.computeNormalMesh =
-      this.options.computeNormals && this.options.computeNormalMesh;
+    this.options.computeNormalMesh = this.options.computeNormals && this.options.computeNormalMesh;
 
     this.xDistance = options.dx || 40;
     this.zDistance = options.dz || 40;
@@ -69,14 +68,8 @@ class Ocean {
 
     if (this.options.computeMesh) {
       this.geometry = new THREE.BufferGeometry();
-      this.geometry.addAttribute(
-        "position",
-        new THREE.BufferAttribute(this.vertices, 3)
-      );
-      this.geometry.addAttribute(
-        "normal",
-        new THREE.BufferAttribute(this.normals, 3)
-      );
+      this.geometry.addAttribute("position", new THREE.BufferAttribute(this.vertices, 3));
+      this.geometry.addAttribute("normal", new THREE.BufferAttribute(this.normals, 3));
       this.geometry.setIndex(new THREE.BufferAttribute(this.indices, 1));
       //this.geometry.dynamic = true;
 
@@ -97,29 +90,16 @@ class Ocean {
       for (var i = 0; i < this.vertexCount; i++) {
         normalIndicesArray.push(i, i + this.vertexCount);
       }
-      this.normalVertices = new Float32Array(
-        normalVerticesArray,
-        0,
-        normalVerticesArray.length
-      );
-      this.normalIndices = new Uint16Array(
-        normalIndicesArray,
-        0,
-        normalIndicesArray.length
-      );
+      this.normalVertices = new Float32Array(normalVerticesArray, 0, normalVerticesArray.length);
+      this.normalIndices = new Uint16Array(normalIndicesArray, 0, normalIndicesArray.length);
       this.normalGeometry = new THREE.BufferGeometry();
       this.normalGeometry.addAttribute(
         "position",
         new THREE.BufferAttribute(this.normalVertices, 3)
       );
-      this.normalGeometry.setIndex(
-        new THREE.BufferAttribute(this.normalIndices, 1)
-      );
+      this.normalGeometry.setIndex(new THREE.BufferAttribute(this.normalIndices, 1));
       var normalMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
-      this.normalMesh = new THREE.LineSegments(
-        this.normalGeometry,
-        normalMaterial
-      );
+      this.normalMesh = new THREE.LineSegments(this.normalGeometry, normalMaterial);
     }
 
     this.waves = [];

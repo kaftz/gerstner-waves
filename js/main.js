@@ -1,4 +1,4 @@
-import { Ocean } from "./js/gpocean.js";
+import { Ocean } from "./gpocean.js";
 
 var testCanvas = document.createElement("canvas");
 var testContext =
@@ -82,7 +82,7 @@ function setup() {
   //stats.domElement.setAttribute("id", "stats");
   //document.body.appendChild(stats.domElement);
 
-  // add event handlers
+  // Add event handlers
   window.addEventListener("resize", onResize, false);
 }
 
